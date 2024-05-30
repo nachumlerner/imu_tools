@@ -91,6 +91,8 @@ class ImuFilterRos
     bool stateless_;
     bool publish_tf_;
     bool reverse_tf_;
+    bool refuse_large_time_update_;
+    bool reset_large_forward_time_jump_;
     std::string fixed_frame_;
     std::string imu_frame_;
     double constant_dt_;
@@ -99,6 +101,8 @@ class ImuFilterRos
     geometry_msgs::Vector3 mag_bias_;
     double orientation_variance_;
     ros::Duration time_jump_threshold_;
+    ros::Duration forward_large_time_jump_threshold_;
+
 
     // **** state variables
     boost::mutex mutex_;
@@ -127,6 +131,7 @@ class ImuFilterRos
     void applyYawOffset(double& q0, double& q1, double& q2, double& q3);
     //! \brief Check whether ROS time has jumped back. If so, reset the filter.
     void checkTimeJump();
+    bool checkLargeTimeJumpForward(const ros::Time& imu_stamp);
 };
 
 #endif  // IMU_FILTER_IMU_MADWICK_FILTER_ROS_H

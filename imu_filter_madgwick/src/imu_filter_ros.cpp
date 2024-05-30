@@ -53,7 +53,16 @@ ImuFilterRos::ImuFilterRos(ros::NodeHandle nh, ros::NodeHandle nh_private)
     nh_private_.param("time_jump_threshold", time_jump_threshold,
                       time_jump_threshold);
     time_jump_threshold_ = ros::Duration(time_jump_threshold);
+    
+    if (!nh_private_.getParam("refuse_large_time_update", refuse_large_time_update_)) refuse_large_time_update_ = true;
+    if (!nh_private_.getParam("reset_large_forward_time_jump", reset_large_forward_time_jump_)) reset_large_forward_time_jump_ = false;
 
+
+    double forward_large_time_jump_threshold{1.0};
+    nh_private_.param("forward_large_time_jump_threshold", forward_large_time_jump_threshold,
+                      forward_large_time_jump_threshold);
+    forward_large_time_jump_threshold_ = ros::Duration(forward_large_time_jump_threshold);
+    
     double yaw_offset = 0.0;
     if (!nh_private_.getParam("yaw_offset", yaw_offset)) yaw_offset = 0.0;
     double declination = 0.0;
@@ -168,6 +177,10 @@ ImuFilterRos::~ImuFilterRos()
 void ImuFilterRos::imuCallback(const ImuMsg::ConstPtr& imu_msg_raw)
 {
     checkTimeJump();
+    if (checkLargeTimeJumpForward(imu_msg_raw->header.stamp))
+    {
+        return; // large jump don't use reading
+    }
 
     boost::mutex::scoped_lock lock(mutex_);
 
@@ -230,6 +243,11 @@ void ImuFilterRos::imuMagCallback(const ImuMsg::ConstPtr& imu_msg_raw,
                                   const MagMsg::ConstPtr& mag_msg)
 {
     checkTimeJump();
+    if (checkLargeTimeJumpForward(imu_msg_raw->header.stamp))
+    {
+        return; // large jump don't use reading
+    }
+    
 
     boost::mutex::scoped_lock lock(mutex_);
 
@@ -516,4 +534,30 @@ void ImuFilterRos::checkTimeJump()
             "parameter of the filter.");
 
     reset();
+}
+
+bool ImuFilterRos::checkLargeTimeJumpForward(const ros::Time& imu_stamp)
+{
+    bool largeJump = false;
+    if (constant_dt_ > 0.0)
+    {
+        return largeJump; // use constant dt
+    }
+    
+    if (imu_stamp > last_time_ + forward_large_time_jump_threshold_
+    && !last_time_.isZero())
+    {
+        ROS_ERROR("Detected large jump forward, jump is %f[s]. rejecting measurement",
+        (imu_stamp - last_time_).toSec());
+        largeJump = true;
+        last_time_ = imu_stamp; // give time for next move
+        if (reset_large_forward_time_jump_)
+        {
+            reset();
+            largeJump = false;
+        }
+        
+    }   
+
+    return largeJump;
 }
