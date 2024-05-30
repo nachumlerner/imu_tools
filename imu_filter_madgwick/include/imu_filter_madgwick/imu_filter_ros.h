@@ -103,7 +103,6 @@ class ImuFilterRos
     ros::Duration time_jump_threshold_;
     ros::Duration forward_large_time_jump_threshold_;
 
-
     // **** state variables
     boost::mutex mutex_;
     bool initialized_;
