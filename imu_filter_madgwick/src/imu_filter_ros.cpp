@@ -53,7 +53,7 @@ ImuFilterRos::ImuFilterRos(ros::NodeHandle nh, ros::NodeHandle nh_private)
     nh_private_.param("time_jump_threshold", time_jump_threshold,
                       time_jump_threshold);
     time_jump_threshold_ = ros::Duration(time_jump_threshold);
-    
+
     if (!nh_private_.getParam("refuse_large_time_update", refuse_large_time_update_)) refuse_large_time_update_ = true;
     if (!nh_private_.getParam("reset_large_forward_time_jump", reset_large_forward_time_jump_)) reset_large_forward_time_jump_ = false;
 
@@ -62,7 +62,7 @@ ImuFilterRos::ImuFilterRos(ros::NodeHandle nh, ros::NodeHandle nh_private)
     nh_private_.param("forward_large_time_jump_threshold", forward_large_time_jump_threshold,
                       forward_large_time_jump_threshold);
     forward_large_time_jump_threshold_ = ros::Duration(forward_large_time_jump_threshold);
-    
+
     double yaw_offset = 0.0;
     if (!nh_private_.getParam("yaw_offset", yaw_offset)) yaw_offset = 0.0;
     double declination = 0.0;
@@ -247,7 +247,7 @@ void ImuFilterRos::imuMagCallback(const ImuMsg::ConstPtr& imu_msg_raw,
     {
         return; // large jump don't use reading
     }
-    
+
 
     boost::mutex::scoped_lock lock(mutex_);
 
@@ -543,7 +543,7 @@ bool ImuFilterRos::checkLargeTimeJumpForward(const ros::Time& imu_stamp)
     {
         return largeJump; // use constant dt
     }
-    
+
     if (imu_stamp > last_time_ + forward_large_time_jump_threshold_
     && !last_time_.isZero())
     {
@@ -556,8 +556,8 @@ bool ImuFilterRos::checkLargeTimeJumpForward(const ros::Time& imu_stamp)
             reset();
             largeJump = false;
         }
-        
-    }   
+
+    }
 
     return largeJump;
 }
