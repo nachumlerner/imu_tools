@@ -555,7 +555,7 @@ bool ImuFilterRos::checkLargeTimeJumpForward(const ros::Time& imu_stamp)
             "Detected large jump forward, jump is %f[s]. rejecting measurement",
             (imu_stamp - last_time_).toSec());
         largeJump = true;
-        last_time_ = imu_stamp;  // give time for next move
+        last_time_ = imu_stamp;  // save time for next move
         if (reset_large_forward_time_jump_)
         {
             reset();
